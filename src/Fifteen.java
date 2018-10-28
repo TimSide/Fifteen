@@ -49,7 +49,7 @@ public class Fifteen {
         count.setFont(font3);
         count.setVerticalAlignment(JLabel.CENTER);
         count.setHorizontalAlignment(JLabel.CENTER);
-        count.setBounds(0, 60, 100, 100);
+        count.setBounds(0, 80, 100, 50);
         count.setForeground(Color.gray);
 
         // Panel "Record"
@@ -60,6 +60,14 @@ public class Fifteen {
         PanelRecord.setHorizontalAlignment(JLabel.CENTER);
         PanelRecord.setBounds(320, 60, 100, 100);
         PanelRecord.setForeground(Color.gray);
+
+        // Button "Revert"
+        final JButton btnRevert = new JButton("Revert");
+        frame.add(btnRevert);
+        btnRevert.setBounds(10, 130, 86, 40);
+        btnRevert.setBackground(Color.lightGray);
+        btnRevert.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnRevert.setEnabled(false);
 
         // Button "About"
         final JButton btnAbout = new JButton("About");
@@ -115,6 +123,7 @@ public class Fifteen {
         // Button-click "New Game"
         btnNewGame.addActionListener(e -> {
             win.setVisible(false);
+            btnRevert.setEnabled(false);
             game.openFile();
             PanelRecord.setText(Integer.toString(game.getRecord()));
             game.newGame();
@@ -146,38 +155,42 @@ public class Fifteen {
             //Processing of the event
             public void actionPerformed(ActionEvent e) {
 
-                game.setReplace(false);
+                game.setNotReplaced();
                 int a = 0, b = 0;
                 if (game.getNum((i - 1) * 4 + j) == 0) { // Move up
                     a = i - 1;
                     b = j;
-                    game.setReplace(true);
+                    game.setNotReplaced(i, j, a, b);
                 }
                 if (game.getNum((i + 1) * 4 + j) == 0) { // Move down
                     a = i + 1;
                     b = j;
-                    game.setReplace(true);
+                    game.setNotReplaced(i, j, a, b);
                 }
                 if (game.getNum(i * 4 + j - 1) == 0) {    // Move right
                     a = i;
                     b = j - 1;
-                    game.setReplace(true);
+                    game.setNotReplaced(i, j, a, b);
                 }
                 if (game.getNum(i * 4 + j + 1) == 0) {    // Move left
                     a = i;
                     b = j + 1;
-                    game.setReplace(true);
+                    game.setNotReplaced(i, j, a, b);
                 }
 
                 if (game.getReplace()) {    // Moving
-                    game.swap(i * 4 + j, a * 4 + b);
+                    game.swapForward(i * 4 + j, a * 4 + b);
                     buttons[a][b].setText(buttons[i][j].getText());
+
                     if (game.getWinElement(a * 4 + b) == Integer.parseInt(buttons[a][b].getText()))
                         buttons[a][b].setBackground(Color.gray);
                     else
                         buttons[a][b].setBackground(Color.lightGray);
+
                     buttons[i][j].setBackground(Color.white);
                     buttons[i][j].setText(null);
+
+                    btnRevert.setEnabled(true);
                 }
 
                 if (game.gameOver()) {
@@ -187,13 +200,40 @@ public class Fifteen {
                             buttons[i][j].setBackground(Color.gray);
                         }
                     win.setVisible(true);
-                    if (game.getCount() < game.getRecord()) Num.writeFile(game.getCount());
+                    btnRevert.setEnabled(false);
+                    if (game.getCount() < game.getRecord()) game.writeFile(game.getCount());
                 }
                 count.setText(Integer.toString(game.getCount()));
             }
         }
 
-        //Press on game-buttons
+        // Button "Revert" - Revert last change
+        btnRevert.addActionListener(e -> {
+            int i = game.currX;
+            int j = game.currY;
+            int a = game.lastX;
+            int b = game.lastY;
+
+            game.swapBack(i * 4 + j, a * 4 + b);
+            buttons[i][j].setText(buttons[a][b].getText());
+
+            if (game.getWinElement(i * 4 + j) == Integer.parseInt(buttons[i][j].getText()))
+                buttons[i][j].setBackground(Color.gray);
+            else
+                buttons[i][j].setBackground(Color.lightGray);
+            buttons[a][b].setBackground(Color.white);
+            buttons[a][b].setText(null);
+
+            count.setText(Integer.toString(game.getCount()));
+            btnRevert.setEnabled(false);
+
+            game.currX = a;
+            game.currY = b;
+            game.lastX = i;
+            game.lastY = j;
+        });
+
+        // Press on game-buttons
         for (int i = 0; i <= 3; i++) {
             for (int j = 0; j <= 3; j++) {
                 buttons[i][j].addActionListener(new FifteenButtonListener(i, j));
@@ -204,7 +244,7 @@ public class Fifteen {
 
         btnResetRecord.addActionListener(e -> {
             game.setRecord(300);
-            Num.writeFile(300);
+            game.writeFile(300);
             game.openFile();
             PanelRecord.setText(Integer.toString(game.getRecord()));
         });

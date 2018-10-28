@@ -1,17 +1,19 @@
 import javax.swing.*;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Scanner;
 
 class Num {
     private int[] a = new int[16];
     final private int[] b = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0};
     private boolean replace = false;
-//    private boolean gameOver = false;
+
+    int currX;
+    int currY;
+    int lastX;
+    int lastY;
+
+    //    private boolean gameOver = false;
     private static int count = 0;
     private int record;
-    private static Scanner scn;
+
 
     // The generator of random numbers that does not repeat
     void newGame() {
@@ -52,6 +54,11 @@ class Num {
         count += 1;
     }
 
+    // Move counter - decrement
+    private void countDown() {
+        count -= 1;
+    }
+
     // Move counter - get number of moves
     int getCount() {
         return count;
@@ -73,17 +80,32 @@ class Num {
             return b[k];
     }
 
-    // Swap elements
-    void swap(int i, int j) {
+    // Swap elements forward
+    void swapForward(int i, int j) {
         a[j] = a[i];
         a[i] = 0;
         countUp();
-//		replace = true;
+    }
+
+    // Swap elements back
+    void swapBack(int j, int i) {
+        a[j] = a[i];
+        a[i] = 0;
+        countDown();
+    }
+
+    // Set not replaced
+    void setNotReplaced() {
+        this.replace = false;
     }
 
     // Indicator of permutation
-    void setReplace(boolean k) {
-        replace = k;
+    void setNotReplaced(int i, int j, int a, int b) {
+        this.replace = true;
+        currX = i;
+        currY = j;
+        lastX = a;
+        lastY = b;
     }
 
     // Indicator of permutation
@@ -104,6 +126,19 @@ class Num {
         return gameOver;
     }
 
+    // File operations
+
+    void openFile() {
+        setRecord(FileHandler.openFile());
+    }
+
+    void writeFile(int a) {
+        FileHandler.writeFile(a);
+    }
+
+    //=== Setters and Getters ===
+
+
     // Set record
     void setRecord(int a) {
         record = a;
@@ -112,27 +147,6 @@ class Num {
     // Get record
     int getRecord() {
         return record;
-    }
-
-    // Recording data to file
-    static void writeFile(int a) {
-        try {
-            FileWriter writer = new FileWriter("15records.txt");
-            writer.write(Integer.toString(a));
-            writer.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    //Opening file and updating the record data
-    void openFile() {
-        try {
-            scn = new Scanner(new File("15records.txt"));
-        } catch (Exception e) {
-            setRecord(200);
-        }
-        setRecord(scn.nextInt());
     }
 
     // Rules of game
